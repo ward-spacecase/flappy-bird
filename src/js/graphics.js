@@ -4,7 +4,9 @@ var canvas,
     width,
     states = {Splash: 0, Game: 1, Score: 2},
     height,
+    score,
     frames = 0,
+    killerObjects,
     currentState,
     foregroundPosition = 0;
 
@@ -34,12 +36,14 @@ function Bird() {
 
         if(currentState == states.Splash) {
             this.updateIdleBird();
-        } else {
+        }
+        else {
             this.updatePlayingBird();
         }
         if(currentState == states.Score) {
 
         }
+
     };
 
     this.updateIdleBird = function () {
@@ -88,16 +92,100 @@ function Bird() {
     };
 }
 
+function KillerCollection() {
+
+    this._killers = [];
+
+    this.reset = function() {
+        this._killers = [];
+    };
+
+    this.add = function() {
+        console.log('Add KillerObject ' + frames);
+        this._killers.push(new KillerObject());
+    };
+
+    this.update = function() {
+
+        if(frames % 100 === 0) {
+            this.add();
+
+        }
+
+        for(var i = 0, len = this._killers.length; i < len; i++) {
+            var killer = this._killers[i];
+
+            killer.detectCollision();
+            killer.x -= 4;
+            if(killer.x < killer.width - 200) {
+                this._killers.splice(i, 1);
+                i--;
+                len--;
+                score++;
+            }
+        }
+
+    };
+
+    this.draw = function() {
+        for(var i = 0, len = this._killers.length; i < len; i++) {
+            var killer = this._killers[i];
+            killer.draw();
+
+        }
+    }
+
+}
+
+function KillerObject() {
+
+    this.x = 1400;
+    this.y = height - (bottomKillerSprite.height + foregroundSprite.height +220 + 200 * Math.random());
+
+
+    this.width = bottomKillerSprite.width;
+    this.height = bottomKillerSprite.height;
+
+    this.detectCollision = function () {
+
+        var cx  = Math.min(Math.max(bird.x, this.x), this.x+this.width);
+        var cy1 = Math.min(Math.max(bird.y, this.y), this.y+this.height);
+        var cy2 = Math.min(Math.max(bird.y, this.y+this.height+80), this.y+2*this.height+80);
+        // closest difference
+        var dx  = bird.x - cx;
+        var dy1 = bird.y - cy1;
+        var dy2 = bird.y - cy2;
+        // vector length
+        var d1 = dx*dx + dy1*dy1;
+        var d2 = dx*dx + dy2*dy2;
+        var r = bird.radius*bird.radius;
+        // determine intersection
+        if (r > d1 || r > d2) {
+
+            currentState = states.Score;
+
+        }
+
+
+    };
+
+    this.draw = function () {
+        bottomKillerSprite.draw(renderingContext, this.x, this.y);
+        topKillerSprite.draw(renderingContext, this.x, this.y + 210 + this.height);
+    };
+}
 
 function main() {
                         //initalizes game
     bird = new Bird();  //new Bird character Object
+    killerObjects = new KillerCollection();
     windowSetup();      //setup the window
     canvasSetup();      //setup Canvas
     loadGraphics();     //load character, background...
-
+    score = 0;
     currentState = states.Splash;        //set state to splash (dorment state)
     document.body.appendChild(canvas);      //adds created canvans to DOM
+    $('body').append('<span id="score">' + score + '</span>');
 
 
 }
@@ -130,6 +218,7 @@ function windowSetup() {
 function onpress(evt) {
 
     switch(currentState){
+
         case states.Splash:
             currentState = states.Game;
             bird.jump();
@@ -155,13 +244,12 @@ function canvasSetup() {
 
 function loadGraphics() {
     var img = new Image();
-    img.src = "src/image/bird.png";
+    img.src = "src/image/spritesheet2.png";
     img.onload = function () {
 
         initSprites(this);
         gameLoop();
     };
-
 
 }
 
@@ -173,6 +261,7 @@ function gameLoop() {
 }
 
 function update() {
+    $('#score').html(score);
     frames++;
 
     bird.update();
@@ -180,12 +269,17 @@ function update() {
     if(currentState != states.Score){
         foregroundPosition = (foregroundPosition - 2) % 14;
     }
+    if(currentState == states.Game) {
+        killerObjects.update();
+    }
 }
 
 function render() {
 
     renderingContext.fillRect(0,0, width, height);
-    backgroundSprite.draw(renderingContext, 0, 150);
+    backgroundSprite.draw(renderingContext, 0, 0 );
+
+    killerObjects.draw(renderingContext);
 
     bird.draw(renderingContext);
 
@@ -194,4 +288,8 @@ function render() {
     foregroundSprite.draw(renderingContext, foregroundPosition + foregroundSprite.width, height - foregroundSprite.height);
     foregroundSprite.draw(renderingContext, foregroundPosition + foregroundSprite.width*2, height - foregroundSprite.height);
     foregroundSprite.draw(renderingContext, foregroundPosition + foregroundSprite.width*3, height - foregroundSprite.height);
+
+
+
+
 }

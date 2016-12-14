@@ -3,6 +3,8 @@
 var fishSprite;
 var backgroundSprite;
 var foregroundSprite;
+var bottomKillerSprite;
+var topKillerSprite;
 
 function Sprite(img, x, y, width, height) {
     this.img = img;
@@ -29,6 +31,9 @@ function initSprites(img) {
 
     ];
 
-    backgroundSprite = new Sprite(img, 0, 450,0, 0);
-    foregroundSprite = new Sprite(img, 0, 250, 335, 80);
+    backgroundSprite = new Sprite(img, 4, 380,2000, 1000);
+    foregroundSprite = new Sprite(img, 2, 250, 310, 80);
+
+    bottomKillerSprite = new Sprite(img, 990, 30, 130,300);
+    topKillerSprite = new Sprite(img, 990, 30, 130,300);
 }
